@@ -25,20 +25,6 @@ def build() -> Task:
             "- 냉각수 유량: 66.8 L/min (정상: 95~105 L/min)\n\n"
             "공장 데이터를 조회하고 운전 정책에 따라 필요한 조치를 즉시 취하세요."
         ),
-        initial_state={
-            "lines": {
-                "line1": {"status": "running"},
-                "line2": {"status": "running"},
-                "line3": {"status": "running", "temp": 113.4, "flow": 66.8},
-            },
-            "valves": {
-                "V-05": {"position": "open"},
-                "V-06": {"position": "open"},
-                "V-07": {"position": "partial"},
-            },
-            "work_orders": [],
-            "notifications": [],
-        },
         policy_checks=[
             PolicyCheck(
                 description="온도 110°C 초과 → 엔지니어에게 critical 수준 알림 발송",

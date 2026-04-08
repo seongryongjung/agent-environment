@@ -1,11 +1,10 @@
 """
 Action Tools — 공장 상태를 변경하는 툴
 
-에이전트가 호출하면 state_db의 상태가 실제로 바뀐다.
-task_evaluator는 어떤 액션이 호출됐는지, 상태가 어떻게 바뀌었는지 채점한다.
+에이전트가 호출하면 실행 결과를 반환한다.
+어떤 액션이 호출됐는지는 agent.run()의 tool_calls 로그로 추적한다.
 """
 
-import state_db
 from runtime.registry import register_function
 
 
@@ -18,10 +17,7 @@ from runtime.registry import register_function
     },
 )
 def shutdown_line(line_id: str, reason: str) -> dict:
-    state_db.set(f"lines.{line_id}.status", "shutdown")
-    result = {"ok": True, "line_id": line_id, "status": "shutdown", "reason": reason}
-    state_db.append_log("shutdown_line", {"line_id": line_id, "reason": reason}, result)
-    return result
+    return {"ok": True, "line_id": line_id, "status": "shutdown", "reason": reason}
 
 
 @register_function(
@@ -32,10 +28,7 @@ def shutdown_line(line_id: str, reason: str) -> dict:
     },
 )
 def open_valve(valve_id: str) -> dict:
-    state_db.set(f"valves.{valve_id}.position", "open")
-    result = {"ok": True, "valve_id": valve_id, "position": "open"}
-    state_db.append_log("open_valve", {"valve_id": valve_id}, result)
-    return result
+    return {"ok": True, "valve_id": valve_id, "position": "open"}
 
 
 @register_function(
@@ -48,19 +41,7 @@ def open_valve(valve_id: str) -> dict:
     },
 )
 def create_work_order(equipment_id: str, description: str, priority: str = "high") -> dict:
-    import time
-    wo_id = f"WO-{int(time.time())}"
-    wo = {
-        "id": wo_id,
-        "equipment_id": equipment_id,
-        "description": description,
-        "priority": priority,
-        "status": "open",
-    }
-    state_db.append_to_list("work_orders", wo)
-    result = {"ok": True, "work_order_id": wo_id, **wo}
-    state_db.append_log("create_work_order", {"equipment_id": equipment_id, "priority": priority}, result)
-    return result
+    return {"ok": True, "equipment_id": equipment_id, "description": description, "priority": priority}
 
 
 @register_function(
@@ -72,12 +53,7 @@ def create_work_order(equipment_id: str, description: str, priority: str = "high
     },
 )
 def notify_engineer(level: str, message: str) -> dict:
-    from datetime import datetime
-    notification = {"level": level, "message": message, "timestamp": datetime.now().isoformat()}
-    state_db.append_to_list("notifications", notification)
-    result = {"ok": True, "sent": True, "level": level, "message": message}
-    state_db.append_log("notify_engineer", {"level": level, "message": message}, result)
-    return result
+    return {"ok": True, "sent": True, "level": level, "message": message}
 
 
 @register_function(
@@ -89,11 +65,9 @@ def notify_engineer(level: str, message: str) -> dict:
     },
 )
 def request_restart_approval(line_id: str, reason: str) -> dict:
-    result = {
+    return {
         "ok": True,
         "line_id": line_id,
         "approval_status": "pending",
         "message": "설비팀장(내선 201)에게 승인 요청이 전달됐습니다. 승인 전까지 재가동 금지.",
     }
-    state_db.append_log("request_restart_approval", {"line_id": line_id, "reason": reason}, result)
-    return result

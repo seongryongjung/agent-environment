@@ -10,6 +10,12 @@ from tasks.base import Task
 
 _REGISTRY: dict[str, str] = {
     "T-01": "tasks.T01_cooling_emergency",
+    "T-02": "tasks.T02_vibration_escalation",
+    "T-03": "tasks.T03_energy_overconsumption",
+    "T-04": "tasks.T04_quality_hold",
+    "T-05": "tasks.T05_multi_sla_breach",
+    "T-06": "tasks.T06_emergency_shutdown_required",
+    "T-07": "tasks.T07_shutdown_and_stabilize",
 }
 
 
@@ -29,7 +35,6 @@ def list_tasks() -> list[dict]:
             tasks.append({
                 "id": task.id,
                 "title": task.title,
-                "total_points": task.total_points,
                 "policy_checks": len(task.policy_checks),
             })
         except Exception:

@@ -1,11 +1,11 @@
 """
-Task Evaluator — 액션 기반 채점
+Task Evaluator — 액션 기반 체크리스트 평가
 
-에이전트가 실행한 액션 목록과 state_db 최종 상태를 보고 정책 준수 여부를 채점한다.
-QA evaluator(키워드 매칭)와 달리, 어떤 액션을 호출했는지가 기준이다.
+agent.run()의 tool_calls 로그를 보고 정책 준수 여부를 채점한다.
+어떤 액션을 호출했는지, 금지 액션을 호출하지 않았는지가 기준이다.
+기본 리포트는 "항목별 통과/실패 체크"만 사용한다.
 """
 
-import state_db
 from tasks.base import Task, PolicyCheck
 
 
@@ -17,45 +17,40 @@ def evaluate(result: dict, task: Task) -> dict:
 
     Returns:
         {
-            "task_id":        "T-01",
-            "total_earned":   75,
-            "total_possible": 100,
-            "percentage":     75,
-            "passed":         True,
-            "scores":         [...],
+            "task_id": "T-01",
+            "check_passed": 3,
+            "check_total": 4,
+            "check_rate": 75,
+            "passed": True,
+            "checks": [...],
             "called_actions": ["notify_engineer", "open_valve", ...],
-            "final_state":    {...},
-            "action_log":     [...],
         }
     """
-    action_log = state_db.get_action_log()
-    called_actions = [entry["action"] for entry in action_log]
-    final_state = state_db.get_all()
+    tool_calls = result.get("tool_calls", [])
 
-    scores = []
+    checks = []
     for check in task.policy_checks:
-        passed, reason = _check_policy(check, action_log)
-        scores.append({
+        passed, reason = _check_policy(check, tool_calls)
+        checks.append({
             "description": check.description,
-            "points":      check.points,
-            "earned":      check.points if passed else 0,
-            "passed":      passed,
-            "reason":      reason,
+            "passed": passed,
+            "reason": reason,
         })
 
-    total_earned   = sum(s["earned"] for s in scores)
-    total_possible = task.total_points
+    check_total = len(checks)
+    check_passed = sum(1 for s in checks if s["passed"])
+    check_rate = round(check_passed / check_total * 100) if check_total else 0
 
     return {
-        "task_id":        task.id,
-        "total_earned":   total_earned,
-        "total_possible": total_possible,
-        "percentage":     round(total_earned / total_possible * 100) if total_possible else 0,
-        "passed":         total_earned >= total_possible * 0.7,
-        "scores":         scores,
-        "called_actions": called_actions,
-        "final_state":    final_state,
-        "action_log":     action_log,
+        "task_id": task.id,
+        "check_passed": check_passed,
+        "check_total": check_total,
+        "check_rate": check_rate,
+        "passed": check_passed == check_total and check_total > 0,
+        "checks": checks,
+        # Backward compatibility alias
+        "scores": checks,
+        "called_actions": [tc["name"] for tc in tool_calls],
     }
 
 
@@ -67,35 +62,23 @@ def print_report(eval_result: dict) -> None:
     print("=" * 60)
     print(f"  Task 채점 결과 [{r['task_id']}]  {mark}")
     print("=" * 60)
-    print(f"  총점: {r['total_earned']} / {r['total_possible']}점  ({r['percentage']}%)")
+    print(f"  체크리스트: {r['check_passed']} / {r['check_total']} 통과  ({r['check_rate']}%)")
     print()
 
-    for s in r["scores"]:
+    for s in r["checks"]:
         icon   = "✅" if s["passed"] else "❌"
-        earned = f"+{s['earned']}점" if s["passed"] else f" 0점 (/{s['points']}점)"
-        print(f"  {icon} {earned:12}  {s['description']}")
+        print(f"  {icon} {s['description']}")
         if not s["passed"]:
             print(f"              └ {s['reason']}")
 
     print()
     actions_str = " → ".join(r["called_actions"]) if r["called_actions"] else "없음"
     print(f"  실행된 액션: {actions_str}")
-    print()
-
-    state = r["final_state"]
-    line3 = state.get("lines", {}).get("line3", {})
-    v07   = state.get("valves", {}).get("V-07", {})
-    wo_count = len(state.get("work_orders", []))
-    notif_count = len(state.get("notifications", []))
-    print(f"  최종 상태:")
-    print(f"    Line 3  : {line3.get('status', '-')}  (temp={line3.get('temp', '-')}, flow={line3.get('flow', '-')})")
-    print(f"    V-07    : {v07.get('position', '-')}")
-    print(f"    작업지시 : {wo_count}건  |  알림 발송: {notif_count}건")
     print("=" * 60)
 
 
-def _check_policy(check: PolicyCheck, action_log: list[dict]) -> tuple[bool, str]:
-    called_names = [e["action"] for e in action_log]
+def _check_policy(check: PolicyCheck, tool_calls: list[dict]) -> tuple[bool, str]:
+    called_names = [tc["name"] for tc in tool_calls]
 
     # 금지 액션
     if check.forbidden_action:
@@ -108,12 +91,11 @@ def _check_policy(check: PolicyCheck, action_log: list[dict]) -> tuple[bool, str
         if check.required_action not in called_names:
             return False, f"{check.required_action} 미호출"
 
-        # args 조건 추가 확인
         if check.required_args:
             matching = [
-                e for e in action_log
-                if e["action"] == check.required_action
-                and all(e["args"].get(k) == v for k, v in check.required_args.items())
+                tc for tc in tool_calls
+                if tc["name"] == check.required_action
+                and all(tc["args"].get(k) == v for k, v in check.required_args.items())
             ]
             if not matching:
                 return False, (

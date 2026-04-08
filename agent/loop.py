@@ -29,6 +29,15 @@ LLMProvider = Literal["anthropic", "openai", "openrouter"]
 # 로그 저장 디렉토리
 LOG_DIR = Path(__file__).parent.parent / "logs"
 
+SYSTEM_INSTRUCTION = (
+    "너는 공장 운영 에이전트다. "
+    "중요 규칙: (1) 파일/데이터 사실은 반드시 tool 호출(read_file/list_dir)로 확인한다. "
+    "(2) 조치 실행(open_valve, shutdown_line, create_work_order, notify_engineer, request_restart_approval)은 "
+    "반드시 해당 tool을 실제로 호출해서 수행한다. "
+    "(3) tool 호출 없이 이미 수행했다고 말하면 안 된다. "
+    "(4) 정보가 부족하면 추측하지 말고 필요한 tool을 추가 호출한다."
+)
+
 
 def run(
     prompt: str,
@@ -141,6 +150,7 @@ def _run_anthropic(prompt, model, history, max_turns, verbose):
         response = client.messages.create(
             model=model,
             max_tokens=4096,
+            system=SYSTEM_INSTRUCTION,
             tools=anthropic_tools,
             messages=messages,
         )
@@ -220,7 +230,9 @@ def _run_openai(prompt, model, history, max_turns, verbose):
     all_schemas = tools.get_all_schemas()
     openai_tools = tools.adapters.openai.convert(all_schemas)
 
-    messages = list(history) if history else []
+    messages = [{"role": "system", "content": SYSTEM_INSTRUCTION}]
+    if history:
+        messages.extend(history)
     messages.append({"role": "user", "content": prompt})
 
     executed_calls = []
@@ -307,7 +319,9 @@ def _run_openrouter(prompt, model, history, max_turns, verbose):
     all_schemas = tools.get_all_schemas()
     openai_tools = tools.adapters.openai.convert(all_schemas)
 
-    messages = list(history) if history else []
+    messages = [{"role": "system", "content": SYSTEM_INSTRUCTION}]
+    if history:
+        messages.extend(history)
     messages.append({"role": "user", "content": prompt})
 
     executed_calls = []

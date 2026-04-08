@@ -14,7 +14,6 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import state_db
 from factory_data import load_factory
 from tasks.loader import load_task, list_tasks
 import agent
@@ -31,11 +30,10 @@ def run_task(
     load_factory()
     print("✓ 공장 데이터 로드 완료")
 
-    # 2. 태스크 로드 + state_db 초기화
+    # 2. 태스크 로드
     task = load_task(task_id)
-    state_db.reset(task.initial_state)
     print(f"✓ Task 로드: [{task.id}] {task.title}")
-    print(f"  정책 항목: {len(task.policy_checks)}개  총점: {task.total_points}점")
+    print(f"  정책 항목: {len(task.policy_checks)}개")
 
     print()
     print("=" * 60)
@@ -73,7 +71,7 @@ if __name__ == "__main__":
     if args.list:
         print("\n[ 등록된 Tasks ]")
         for t in list_tasks():
-            print(f"  {t['id']}  {t['title']}  ({t['total_points']}점, {t['policy_checks']}개 정책)")
+            print(f"  {t['id']}  {t['title']}  ({t['policy_checks']}개 정책)")
         sys.exit(0)
 
     run_task(args.task, args.provider, args.model, not args.no_verbose)
