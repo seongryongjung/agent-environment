@@ -1,0 +1,5 @@
+defect_code,name,severity,typical_root_cause
+D-101,micro-crack,high,temperature overshoot
+D-121,surface haze,medium,cooling instability
+D-142,dimension drift,medium,pressure fluctuation
+D-199,label mismatch,low,manual operation error

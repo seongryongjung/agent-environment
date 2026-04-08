@@ -1,0 +1,4 @@
+version,effective_date,target_temp_c,target_pressure_bar,notes
+R3-2.1,2024-03-01,88,3.3,baseline
+R3-2.2,2024-04-15,87,3.25,energy optimize
+R3-2.3,2024-05-20,86,3.2,quality stability

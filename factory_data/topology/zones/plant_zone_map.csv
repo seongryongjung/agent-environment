@@ -1,0 +1,4 @@
+zone,assets,safety_class
+Cooling-B,V-07;PUMP-A;HX-31,critical
+Cooling-A,V-05;V-06;PUMP-B,important
+Utility-Bus,main_bus;transformer_T2,important

@@ -1,0 +1,9 @@
+asset_id,type,line,criticality,owner_team,commissioned_date
+V-05,valve,L1,B,Utilities,2021-02-11
+V-06,valve,L2,B,Utilities,2021-02-11
+V-07,valve,L3,A,Utilities,2021-02-11
+PUMP-A,pump,L3,A,Mechanical,2020-08-01
+PUMP-B,pump,L2,B,Mechanical,2020-08-01
+HX-31,heat_exchanger,L3,A,Process,2019-11-20
+SENS-L3-T,sensor_temp,L3,A,Instrumentation,2022-01-14
+SENS-L3-F,sensor_flow,L3,A,Instrumentation,2022-01-14

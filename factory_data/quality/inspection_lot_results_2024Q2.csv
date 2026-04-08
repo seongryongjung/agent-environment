@@ -1,0 +1,5 @@
+lot_id,date,line,yield_pct,defect_pct,decision
+LOT-240418-A,2024-04-18,L3,97.0,1.6,release
+LOT-240503-C,2024-05-03,L3,96.4,1.8,hold
+LOT-240521-F,2024-05-21,L3,96.8,2.1,reinspect
+LOT-240526-H,2024-05-26,L2,97.4,1.4,release

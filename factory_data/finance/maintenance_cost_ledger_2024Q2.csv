@@ -1,0 +1,5 @@
+date,asset_id,work_type,labor_usd,parts_usd,total_usd
+2024-04-03,V-05,preventive,340,120,460
+2024-04-18,V-06,preventive,370,150,520
+2024-05-07,PUMP-A,corrective,620,900,1520
+2024-05-22,V-07,inspection,410,0,410

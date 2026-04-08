@@ -1,0 +1,4 @@
+condition_code,condition_desc,allowed_override_role,max_duration_min,requires_postmortem
+E-110,110C 이상 고온,PlantManager,30,yes
+E-115,115C 이상 긴급,IncidentCommander,15,yes
+P-2400,수요전력 초과,ShiftLeader,45,no

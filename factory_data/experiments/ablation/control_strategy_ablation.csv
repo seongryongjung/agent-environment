@@ -1,0 +1,5 @@
+strategy,avg_temp_c,peak_temp_c,energy_kwh,defect_pct
+baseline,93.1,113.4,2510,2.1
+slowdown_15,90.8,108.2,2435,1.7
+shed_bundle_L1L2,91.2,109.1,2398,1.8
+aggressive_speedup,95.4,116.0,2560,2.9

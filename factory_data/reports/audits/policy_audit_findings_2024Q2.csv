@@ -1,0 +1,4 @@
+finding_id,date,severity,area,summary,status
+F-2024-031,2024-04-12,high,operations,고온시 감속 기준 미달 사례 반복,open
+F-2024-044,2024-04-29,medium,maintenance,V-07 SLA 경고 후속조치 지연,open
+F-2024-058,2024-05-10,low,energy,피크 시간 사전 감속 기록 누락,closed

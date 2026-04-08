@@ -1,0 +1,4 @@
+[Weekly Ops Review - Week 21]
+- Peak demand violations observed at 14:30 and 14:45.
+- L1/L2 stable; L3 remains primary risk contributor.
+- Proposed action: auto-trigger low-risk shedding bundle (L1+L2) when >2400 kW.

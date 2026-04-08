@@ -1,0 +1,4 @@
+violation_id,date,policy,severity,description,closed
+PV-240412-01,2024-04-12,operation_guardrail,high,slowdown below 15% at >105C,no
+PV-240505-02,2024-05-05,energy_demand,medium,missing pre-shed action above 2300kW,yes
+PV-240521-03,2024-05-21,operation_guardrail,high,output increase command at >110C attempted,no

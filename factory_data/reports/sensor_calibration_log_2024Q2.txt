@@ -1,0 +1,5 @@
+[센서 교정 로그 2024Q2]
+- line3_temp_sensor: 2024-04-10
+- line3_flow_sensor: 2024-01-15
+- line3_vibration_sensor: 2024-03-05
+- line1_pressure_sensor: 2024-02-01

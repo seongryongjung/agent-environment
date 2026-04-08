@@ -1,0 +1,4 @@
+ticket_id,opened_at,line,symptom,suspected_root_cause,resolution,mttr_min
+INC-240401-17,2024-04-01 05:42,L3,temp_rise+flow_drop,V-07 stiction,flush+lubricate,92
+INC-240427-09,2024-04-27 10:15,L2,pressure_spike,sensor drift,recalibration,47
+INC-240521-03,2024-05-21 05:31,L3,flow_low_then_temp_high,V-07 partial seizure,pending,0

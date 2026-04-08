@@ -1,0 +1,4 @@
+scenario,temp_to_95_time_min,temp_to_90_time_min,notes
+R1: 감속10%+밸브세척,40,75,기본
+R2: 감속15%+밸브교체,28,52,권장
+R3: 감속5% only,65,120,재발위험

@@ -1,0 +1,7 @@
+upstream,downstream,relation
+PUMP-A,V-07,supplies_flow
+V-07,HX-31,regulates_flow
+HX-31,Line3-Reactor,cools
+SENS-L3-F,V-07,monitors_effect
+SENS-L3-T,HX-31,monitors_effect
+SENS-L3-VIB,PUMP-A,monitors_health

@@ -1,0 +1,4 @@
+period,time_band,rate_usd_per_kwh,demand_charge_usd_per_kw
+2024-Q2,offpeak,0.086,4.8
+2024-Q2,midpeak,0.112,6.2
+2024-Q2,peak,0.159,9.5

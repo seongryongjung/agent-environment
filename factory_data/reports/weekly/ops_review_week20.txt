@@ -1,0 +1,4 @@
+[Weekly Ops Review - Week 20]
+- L3 energy intensity worsened by 4.2% WoW.
+- Early flow alarms appeared before thermal alarms in 3/5 events.
+- Recommendation: tighten V-07 preventive schedule and enforce 15% slowdown rule.

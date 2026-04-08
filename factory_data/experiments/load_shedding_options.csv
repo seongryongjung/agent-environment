@@ -1,0 +1,5 @@
+option_id,action,expected_kw_reduction,operational_risk
+L1,보조 히터 오프,45,low
+L2,세척라인 지연,65,low
+L3,압축기 순차 제어,80,medium
+L4,냉각탑 보조팬 정지,35,medium

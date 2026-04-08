@@ -1,0 +1,4 @@
+part,min_onhand,target_onhand,reorder_point,review_cycle_days
+V-07 valve body,1,2,1,7
+flow sensor module,2,4,2,7
+pump seal kit,1,3,1,14

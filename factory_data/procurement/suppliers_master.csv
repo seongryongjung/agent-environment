@@ -1,0 +1,6 @@
+supplier_id,name,country,critical_part,contract_tier,otd_score
+SUP-001,CoreValve Systems,KR,V-07 valve body,A,96.2
+SUP-002,FlowSense Inc.,JP,flow sensor module,A,94.1
+SUP-003,MechSeal Works,DE,pump seal kit,B,91.8
+SUP-004,InduPower Drives,US,motor inverter,B,89.4
+SUP-005,SteelFab Local,KR,mount bracket,C,97.3

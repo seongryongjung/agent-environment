@@ -1,0 +1,6 @@
+po_id,date,supplier_id,part,qty,unit_cost_usd,status
+PO-240401-01,2024-04-01,SUP-001,V-07 valve body,2,6800,received
+PO-240417-03,2024-04-17,SUP-002,flow sensor module,4,900,received
+PO-240503-02,2024-05-03,SUP-003,pump seal kit,3,1200,received
+PO-240519-06,2024-05-19,SUP-001,V-07 valve body,1,6900,open
+PO-240526-02,2024-05-26,SUP-004,motor inverter,2,2100,open

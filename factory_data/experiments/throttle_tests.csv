@@ -1,0 +1,5 @@
+plan_id,action,expected_kw_reduction,quality_risk
+T1,Line3 5% 감속,58,low
+T2,Line3 10% 감속,92,medium
+T3,Line2 5% 감속,55,medium
+T4,전체 5% 감속,145,high

@@ -1,0 +1,4 @@
+[Postmortem INC-240401-17]
+Root Cause: V-07 stiction caused delayed coolant response.
+Contributing Factors: SLA delay, incomplete shift handoff context.
+Preventive Action: add valve travel trend alert at 75% threshold.

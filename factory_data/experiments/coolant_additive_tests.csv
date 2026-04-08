@@ -1,0 +1,4 @@
+test_id,additive_ratio,flow_recovery_pct,side_effect
+C1,0.5%,4.0,none
+C2,1.0%,7.5,minor_foam
+C3,1.5%,9.1,foam_risk

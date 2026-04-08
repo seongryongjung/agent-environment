@@ -1,0 +1,3 @@
+date,lot_id,rework_type,hours,result
+2024-05-04,LOT-240503-C,thermal re-balance,5.5,pass
+2024-05-22,LOT-240521-F,surface polish,4.0,conditional
