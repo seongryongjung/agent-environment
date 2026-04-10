@@ -79,29 +79,38 @@ def print_report(eval_result: dict) -> None:
 
 def _check_policy(check: PolicyCheck, tool_calls: list[dict]) -> tuple[bool, str]:
     called_names = [tc["name"] for tc in tool_calls]
+    errors: list[str] = []
+    oks: list[str] = []
 
     # 금지 액션
     if check.forbidden_action:
         if check.forbidden_action in called_names:
-            return False, f"정책 위반: {check.forbidden_action} 호출됨"
-        return True, f"{check.forbidden_action} 미호출 (정상)"
+            errors.append(f"정책 위반: {check.forbidden_action} 호출됨")
+        else:
+            oks.append(f"{check.forbidden_action} 미호출")
 
     # 필수 액션
     if check.required_action:
         if check.required_action not in called_names:
-            return False, f"{check.required_action} 미호출"
+            errors.append(f"{check.required_action} 미호출")
+        else:
+            if check.required_args:
+                matching = [
+                    tc for tc in tool_calls
+                    if tc["name"] == check.required_action
+                    and all(tc["args"].get(k) == v for k, v in check.required_args.items())
+                ]
+                if not matching:
+                    errors.append(
+                        f"{check.required_action} 호출됐지만 조건 불일치: {check.required_args}"
+                    )
+                else:
+                    oks.append(f"{check.required_action} 호출 + 인자 일치")
+            else:
+                oks.append(f"{check.required_action} 호출")
 
-        if check.required_args:
-            matching = [
-                tc for tc in tool_calls
-                if tc["name"] == check.required_action
-                and all(tc["args"].get(k) == v for k, v in check.required_args.items())
-            ]
-            if not matching:
-                return False, (
-                    f"{check.required_action} 호출됐지만 "
-                    f"조건 불일치: {check.required_args}"
-                )
-        return True, f"{check.required_action} 호출됨"
-
+    if errors:
+        return False, " / ".join(errors)
+    if oks:
+        return True, " / ".join(oks)
     return False, "검증 조건 없음"

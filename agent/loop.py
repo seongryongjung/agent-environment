@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Literal
 
 import tools
-from tools.executor import execute_from_llm_response, reset_session_constraints
+from tools.executor import execute_from_llm_response
 
 
 LLMProvider = Literal["anthropic", "openai", "openrouter"]
@@ -71,8 +71,6 @@ def run(
             "log_path":   str | None, # 저장된 로그 파일 경로
         }
     """
-    # 실행 제약 상태를 초기화한다 (현재 강제 탐색 제약 없음).
-    reset_session_constraints(require_factory_discovery=False)
 
     if provider == "anthropic":
         result = _run_anthropic(prompt, model, history, max_turns, verbose)
@@ -116,6 +114,7 @@ def _save_log(result: dict, prompt: str, provider: str, model: str, scenario_id:
             "turns": result["turns"],
             "tool_call_count": len(result["tool_calls"]),
         },
+        "request_debug": result.get("request_debug"),
         "messages": result["messages"],
         "tool_calls": result["tool_calls"],
         "response": result["response"],
@@ -126,179 +125,195 @@ def _save_log(result: dict, prompt: str, provider: str, model: str, scenario_id:
     return str(log_path)
 
 
-# ── Anthropic ────────────────────────────────────────────────
+# # ── Anthropic ────────────────────────────────────────────────
 
-def _run_anthropic(prompt, model, history, max_turns, verbose):
-    import anthropic as anthropic_sdk
+# def _run_anthropic(prompt, model, history, max_turns, verbose):
+#     import anthropic as anthropic_sdk
 
-    client = anthropic_sdk.Anthropic()
-    model = model or "claude-opus-4-6"
+#     client = anthropic_sdk.Anthropic()
+#     model = model or "claude-opus-4-6"
 
-    all_schemas = tools.get_all_schemas()
-    anthropic_tools = tools.adapters.anthropic.convert(all_schemas)
+#     all_schemas = tools.get_all_schemas()
+#     anthropic_tools = tools.adapters.anthropic.convert(all_schemas)
+#     request_debug = {
+#         "provider": "anthropic",
+#         "system_instruction": SYSTEM_INSTRUCTION,
+#         "tool_schemas_raw": all_schemas,
+#         "tool_schemas_sent": anthropic_tools,
+#     }
 
-    messages = list(history) if history else []
-    messages.append({"role": "user", "content": prompt})
+#     messages = list(history) if history else []
+#     messages.append({"role": "user", "content": prompt})
 
-    executed_calls = []
-    turns = 0
+#     executed_calls = []
+#     turns = 0
 
-    while turns < max_turns:
-        if verbose:
-            print(f"\n[Turn {turns + 1}] LLM 호출 중...")
+#     while turns < max_turns:
+#         if verbose:
+#             print(f"\n[Turn {turns + 1}] LLM 호출 중...")
 
-        response = client.messages.create(
-            model=model,
-            max_tokens=4096,
-            system=SYSTEM_INSTRUCTION,
-            tools=anthropic_tools,
-            messages=messages,
-        )
+#         response = client.messages.create(
+#             model=model,
+#             max_tokens=4096,
+#             system=SYSTEM_INSTRUCTION,
+#             tools=anthropic_tools,
+#             messages=messages,
+#         )
 
-        # 응답 메시지 추가
-        messages.append({"role": "assistant", "content": response.content})
+#         # 응답 메시지 추가
+#         messages.append({"role": "assistant", "content": response.content})
 
-        # tool call 없으면 종료
-        if response.stop_reason == "end_turn":
-            final_text = _extract_text_anthropic(response.content)
-            if verbose:
-                print(f"\n[완료] {turns + 1}턴 사용\n")
-                print("─" * 60)
-                print(final_text)
-                print("─" * 60)
-            return {
-                "response": final_text,
-                "messages": messages,
-                "tool_calls": executed_calls,
-                "turns": turns + 1,
-            }
+#         # tool call 없으면 종료
+#         if response.stop_reason == "end_turn":
+#             final_text = _extract_text_anthropic(response.content)
+#             if verbose:
+#                 print(f"\n[완료] {turns + 1}턴 사용\n")
+#                 print("─" * 60)
+#                 print(final_text)
+#                 print("─" * 60)
+#             return {
+#                 "response": final_text,
+#                 "messages": messages,
+#                 "tool_calls": executed_calls,
+#                 "turns": turns + 1,
+#                 "request_debug": request_debug,
+#             }
 
-        # tool call 실행
-        tool_results = []
-        for block in response.content:
-            if block.type != "tool_use":
-                continue
+#         # tool call 실행
+#         tool_results = []
+#         for block in response.content:
+#             if block.type != "tool_use":
+#                 continue
 
-            name = block.name
-            args = block.input
-            call_id = block.id
+#             name = block.name
+#             args = block.input
+#             call_id = block.id
 
-            if verbose:
-                print(f"  → {name}({json.dumps(args, ensure_ascii=False)})")
+#             if verbose:
+#                 print(f"  → {name}({json.dumps(args, ensure_ascii=False)})")
 
-            result_str = execute_from_llm_response(name, args)
+#             result_str = execute_from_llm_response(name, args)
 
-            if verbose:
-                result = json.loads(result_str)
-                if result.get("ok"):
-                    preview = str(result.get("result", ""))[:120]
-                    print(f"     ✓ {preview}{'...' if len(str(result.get('result',''))) > 120 else ''}")
-                else:
-                    print(f"     ✗ {result.get('error')}")
+#             if verbose:
+#                 result = json.loads(result_str)
+#                 if result.get("ok"):
+#                     preview = str(result.get("result", ""))[:120]
+#                     print(f"     ✓ {preview}{'...' if len(str(result.get('result',''))) > 120 else ''}")
+#                 else:
+#                     print(f"     ✗ {result.get('error')}")
 
-            executed_calls.append({"name": name, "args": args, "result": result_str})
-            tool_results.append({
-                "type": "tool_result",
-                "tool_use_id": call_id,
-                "content": result_str,
-            })
+#             executed_calls.append({"name": name, "args": args, "result": result_str})
+#             tool_results.append({
+#                 "type": "tool_result",
+#                 "tool_use_id": call_id,
+#                 "content": result_str,
+#             })
 
-        messages.append({"role": "user", "content": tool_results})
-        turns += 1
+#         messages.append({"role": "user", "content": tool_results})
+#         turns += 1
 
-    return {
-        "response": "[max_turns 초과로 중단]",
-        "messages": messages,
-        "tool_calls": executed_calls,
-        "turns": turns,
-    }
-
-
-def _extract_text_anthropic(content: list) -> str:
-    texts = [b.text for b in content if hasattr(b, "text")]
-    return "\n".join(texts)
+#     return {
+#         "response": "[max_turns 초과로 중단]",
+#         "messages": messages,
+#         "tool_calls": executed_calls,
+#         "turns": turns,
+#         "request_debug": request_debug,
+#     }
 
 
-# ── OpenAI ───────────────────────────────────────────────────
+# def _extract_text_anthropic(content: list) -> str:
+#     texts = [b.text for b in content if hasattr(b, "text")]
+#     return "\n".join(texts)
 
-def _run_openai(prompt, model, history, max_turns, verbose):
-    import openai as openai_sdk
 
-    client = openai_sdk.OpenAI()
-    model = model or "gpt-4o"
+# # ── OpenAI ───────────────────────────────────────────────────
 
-    all_schemas = tools.get_all_schemas()
-    openai_tools = tools.adapters.openai.convert(all_schemas)
+# def _run_openai(prompt, model, history, max_turns, verbose):
+#     import openai as openai_sdk
 
-    messages = [{"role": "system", "content": SYSTEM_INSTRUCTION}]
-    if history:
-        messages.extend(history)
-    messages.append({"role": "user", "content": prompt})
+#     client = openai_sdk.OpenAI()
+#     model = model or "gpt-4o"
 
-    executed_calls = []
-    turns = 0
+#     all_schemas = tools.get_all_schemas()
+#     openai_tools = tools.adapters.openai.convert(all_schemas)
+#     request_debug = {
+#         "provider": "openai",
+#         "system_instruction": SYSTEM_INSTRUCTION,
+#         "tool_schemas_raw": all_schemas,
+#         "tool_schemas_sent": openai_tools,
+#     }
 
-    while turns < max_turns:
-        if verbose:
-            print(f"\n[Turn {turns + 1}] LLM 호출 중...")
+#     messages = [{"role": "system", "content": SYSTEM_INSTRUCTION}]
+#     if history:
+#         messages.extend(history)
+#     messages.append({"role": "user", "content": prompt})
 
-        response = client.chat.completions.create(
-            model=model,
-            tools=openai_tools,
-            messages=messages,
-        )
+#     executed_calls = []
+#     turns = 0
 
-        msg = response.choices[0].message
-        messages.append(msg.model_dump())
+#     while turns < max_turns:
+#         if verbose:
+#             print(f"\n[Turn {turns + 1}] LLM 호출 중...")
 
-        # tool call 없으면 종료
-        if not msg.tool_calls:
-            final_text = msg.content or ""
-            if verbose:
-                print(f"\n[완료] {turns + 1}턴 사용\n")
-                print("─" * 60)
-                print(final_text)
-                print("─" * 60)
-            return {
-                "response": final_text,
-                "messages": messages,
-                "tool_calls": executed_calls,
-                "turns": turns + 1,
-            }
+#         response = client.chat.completions.create(
+#             model=model,
+#             tools=openai_tools,
+#             messages=messages,
+#         )
 
-        # tool call 실행
-        for tc in msg.tool_calls:
-            name = tc.function.name
-            args = json.loads(tc.function.arguments)
+#         msg = response.choices[0].message
+#         messages.append(msg.model_dump())
 
-            if verbose:
-                print(f"  → {name}({json.dumps(args, ensure_ascii=False)})")
+#         # tool call 없으면 종료
+#         if not msg.tool_calls:
+#             final_text = msg.content or ""
+#             if verbose:
+#                 print(f"\n[완료] {turns + 1}턴 사용\n")
+#                 print("─" * 60)
+#                 print(final_text)
+#                 print("─" * 60)
+#             return {
+#                 "response": final_text,
+#                 "messages": messages,
+#                 "tool_calls": executed_calls,
+#                 "turns": turns + 1,
+#                 "request_debug": request_debug,
+#             }
 
-            result_str = execute_from_llm_response(name, args)
+#         # tool call 실행
+#         for tc in msg.tool_calls:
+#             name = tc.function.name
+#             args = json.loads(tc.function.arguments)
 
-            if verbose:
-                result = json.loads(result_str)
-                if result.get("ok"):
-                    preview = str(result.get("result", ""))[:120]
-                    print(f"     ✓ {preview}{'...' if len(str(result.get('result',''))) > 120 else ''}")
-                else:
-                    print(f"     ✗ {result.get('error')}")
+#             if verbose:
+#                 print(f"  → {name}({json.dumps(args, ensure_ascii=False)})")
 
-            executed_calls.append({"name": name, "args": args, "result": result_str})
-            messages.append({
-                "role": "tool",
-                "tool_call_id": tc.id,
-                "content": result_str,
-            })
+#             result_str = execute_from_llm_response(name, args)
 
-        turns += 1
+#             if verbose:
+#                 result = json.loads(result_str)
+#                 if result.get("ok"):
+#                     preview = str(result.get("result", ""))[:120]
+#                     print(f"     ✓ {preview}{'...' if len(str(result.get('result',''))) > 120 else ''}")
+#                 else:
+#                     print(f"     ✗ {result.get('error')}")
 
-    return {
-        "response": "[max_turns 초과로 중단]",
-        "messages": messages,
-        "tool_calls": executed_calls,
-        "turns": turns,
-    }
+#             executed_calls.append({"name": name, "args": args, "result": result_str})
+#             messages.append({
+#                 "role": "tool",
+#                 "tool_call_id": tc.id,
+#                 "content": result_str,
+#             })
+
+#         turns += 1
+
+#     return {
+#         "response": "[max_turns 초과로 중단]",
+#         "messages": messages,
+#         "tool_calls": executed_calls,
+#         "turns": turns,
+#         "request_debug": request_debug,
+#     }
 
 
 # ── OpenRouter ───────────────────────────────────────────────
@@ -318,6 +333,11 @@ def _run_openrouter(prompt, model, history, max_turns, verbose):
 
     all_schemas = tools.get_all_schemas()
     openai_tools = tools.adapters.openai.convert(all_schemas)
+    request_debug = {
+        "provider": "openrouter",
+        "system_instruction": SYSTEM_INSTRUCTION,
+        "tool_schemas_raw": all_schemas,
+    }
 
     messages = [{"role": "system", "content": SYSTEM_INSTRUCTION}]
     if history:
@@ -341,7 +361,15 @@ def _run_openrouter(prompt, model, history, max_turns, verbose):
         )
 
         msg = response.choices[0].message
-        messages.append(msg.model_dump())
+        msg_dict = msg.model_dump()
+        for tc in msg_dict.get("tool_calls") or []:
+            fn = tc.get("function", {})
+            if fn.get("arguments"):
+                try:
+                    fn["arguments"] = json.dumps(json.loads(fn["arguments"]), ensure_ascii=False)
+                except (json.JSONDecodeError, TypeError):
+                    pass
+        messages.append(msg_dict)
 
         if not msg.tool_calls:
             final_text = msg.content or ""
@@ -355,6 +383,7 @@ def _run_openrouter(prompt, model, history, max_turns, verbose):
                 "messages": messages,
                 "tool_calls": executed_calls,
                 "turns": turns + 1,
+                "request_debug": request_debug,
             }
 
         for tc in msg.tool_calls:
@@ -388,4 +417,5 @@ def _run_openrouter(prompt, model, history, max_turns, verbose):
         "messages": messages,
         "tool_calls": executed_calls,
         "turns": turns,
+        "request_debug": request_debug,
     }

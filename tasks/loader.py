@@ -16,6 +16,8 @@ _REGISTRY: dict[str, str] = {
     "T-05": "tasks.T05_multi_sla_breach",
     "T-06": "tasks.T06_emergency_shutdown_required",
     "T-07": "tasks.T07_shutdown_and_stabilize",
+    "T-08": "tasks.T08_cross_domain_maintenance_triage",
+    "T-09": "tasks.T09_quality_energy_tradeoff",
 }
 
 

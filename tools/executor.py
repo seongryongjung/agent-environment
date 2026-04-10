@@ -21,11 +21,7 @@ _VFS_DISPATCH: dict[str, callable] = {
 }
 
 
-def reset_session_constraints(require_factory_discovery: bool = True) -> None:
-    """
-    실행 제약 리셋 훅 (현재는 별도 제약 없음).
-    """
-    return None
+
 
 
 def execute(name: str, args: dict) -> dict:
